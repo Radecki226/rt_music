@@ -8,17 +8,20 @@
 #include <mutex>
 #include <array>
 
-template <size_t M, typename CustomAllocator = std::allocator<int32_t>>
+template <size_t M>
 class CircularBuffer {    
 private:
-    std::vector<int32_t, CustomAllocator> buffer_;
+    static_assert(
+        M > 0, 
+        "Error: Number of microphones can't be 0!"
+    );
+
+    std::vector<int32_t> buffer_;
     size_t capacityChunks_ = 0;    
     size_t headChunk_ = 0;
     bool isFull_ = false;
 
     mutable std::mutex accessMutex_;
-
-    size_t getCurrentSize() const;
 
 public:
     explicit CircularBuffer(size_t initialCapacityChunks);
@@ -28,21 +31,18 @@ public:
     void push(const std::array<int32_t, M> &chunk);
 
     void get(size_t numChunksToGet, std::vector<int32_t>& destinationBuffer) const;
+
+    size_t getCurrentSizeChunks() const;
 };
 
-template <size_t M, typename CustomAllocator>
-size_t CircularBuffer<M,CustomAllocator>::getCurrentSize() const { 
-    return isFull_ ? capacityChunks_ : headChunk_;
-}
-
-template <size_t M, typename CustomAllocator>
-CircularBuffer<M,CustomAllocator>::CircularBuffer(size_t initialCapacityChunks) {
+template <size_t M>
+CircularBuffer<M>::CircularBuffer(size_t initialCapacityChunks) {
     reconfig(initialCapacityChunks);
 }
 
-template <size_t M, typename CustomAllocator>
-void CircularBuffer<M, CustomAllocator>::reconfig(size_t newCapacityChunks) {
-    if (newCapacityChunks == 0 || M == 0) {
+template <size_t M>
+void CircularBuffer<M>::reconfig(size_t newCapacityChunks) {
+    if (newCapacityChunks == 0) {
         throw std::invalid_argument("Capacity and M must be greater than zero.");
     }
 
@@ -58,8 +58,8 @@ void CircularBuffer<M, CustomAllocator>::reconfig(size_t newCapacityChunks) {
     isFull_ = false;
 }
 
-template <size_t M, typename CustomAllocator>
-void CircularBuffer<M, CustomAllocator>::push(const std::array<int32_t, M> &array) {
+template <size_t M>
+void CircularBuffer<M>::push(const std::array<int32_t, M> &array) {
     std::lock_guard<std::mutex> lock(accessMutex_); 
 
     size_t startIndex = headChunk_ * M;
@@ -73,15 +73,15 @@ void CircularBuffer<M, CustomAllocator>::push(const std::array<int32_t, M> &arra
     }
 }
 
-template <size_t M, typename CustomAllocator>
-void CircularBuffer<M, CustomAllocator>::get(size_t numChunksToGet, std::vector<int32_t>& destinationBuffer) const {
+template <size_t M>
+void CircularBuffer<M>::get(size_t numChunksToGet, std::vector<int32_t>& destinationBuffer) const {
     if (numChunksToGet*M > destinationBuffer.size() || numChunksToGet == 0) {
         throw std::invalid_argument("Mismatch between buffer size and requested length!");
     }
 
     std::lock_guard<std::mutex> lock(accessMutex_); 
 
-    size_t currentSizeChunks = getCurrentSize();
+    size_t currentSizeChunks = getCurrentSizeChunks();
 
     if (numChunksToGet > currentSizeChunks) {
         throw std::invalid_argument("Requested chunk bigger than circular buffer size");
@@ -94,7 +94,14 @@ void CircularBuffer<M, CustomAllocator>::get(size_t numChunksToGet, std::vector<
         startIdx = (capacityChunks_ - numChunksToGet + headChunk_) * M;
     }
 
+    size_t capacityWords = capacityChunks_ * M;
+
     for (size_t i = 0; i < numChunksToGet*M; i++) {
-        destinationBuffer[i] = buffer_[(startIdx+i) % capacityChunks_];
+        destinationBuffer[i] = buffer_[(startIdx+i) % capacityWords];
     }
+}
+
+template <size_t M>
+size_t CircularBuffer<M>::getCurrentSizeChunks() const { 
+    return isFull_ ? capacityChunks_ : headChunk_;
 }

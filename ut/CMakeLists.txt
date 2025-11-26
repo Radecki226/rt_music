@@ -1,32 +1,47 @@
-cmake_minimum_required(VERSION 3.16)
-project(ut CXX)
+cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+project(unitTests CXX)
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
-set(TEST_DIR ${CMAKE_SOURCE_DIR})
-set(PROJ_DIR ${CMAKE_SOURCE_DIR}/..)
+find_package(Catch2 REQUIRED) 
+include(CTest)
+include(Catch)
 
-include_directories(${PROJ_DIR}/src/circularBuffer)
-
-add_executable(ut 
-    ${TEST_DIR}/TestCircularBuffer.cpp
-    ${PROJ_DIR}/src/circularBuffer/CircularBuffer.hpp 
-)
-
-target_compile_options(ut PRIVATE
-    -Wall
+add_library(StrictBuild INTERFACE)
+set(STRICT_WARNINGS 
+    -Wall 
     -Wextra
+    -Wpedantic
     -Werror
 )
-
-target_compile_options(ut PUBLIC 
+set(ASAN_FLAGS 
     -fsanitize=address 
-    -fno-omit-frame-pointer 
+    -fno-omit-frame-pointer # Better stack traces
 )
 
-target_link_options(ut PRIVATE
-    -fsanitize=address
+target_compile_options(StrictBuild INTERFACE ${STRICT_WARNINGS} ${ASAN_FLAGS})
+target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
+
+
+# add_library(CircularBuffer STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../src/circularBuffer/CircularBuffer.hpp)
+# target_include_directories(CircularBuffer INTERFACE 
+#     ${CMAKE_CURRENT_SOURCE_DIR}/../src
+# )
+
+add_library(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/circularBuffer/CircularBuffer.hpp)
+target_link_libraries(CircularBuffer INTERFACE StrictBuild)
+target_include_directories(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/circularBuffer)
+
+add_executable(unitTests
+    TestCircularBuffer.cpp
 )
+
+target_link_libraries(unitTests PRIVATE
+    CircularBuffer
+    Catch2::Catch2WithMain
+    StrictBuild
+)
+
+catch_discover_tests(unitTests)
