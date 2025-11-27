@@ -6,5 +6,11 @@ RT Music implementation in c++.
 cd ext/Catch2
 cmake -B Build -S . -DBUILD_TESTING=OFF
 sudo cmake --build Build/ --target install
-``
+```
 
+## Build ut
+```
+mkdir ut/build && cd ut/build
+cmake -GNinja ..
+ninja && ctest -R ".*"
+```

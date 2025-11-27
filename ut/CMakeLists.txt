@@ -25,14 +25,14 @@ target_compile_options(StrictBuild INTERFACE ${STRICT_WARNINGS} ${ASAN_FLAGS})
 target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
 
 
-# add_library(CircularBuffer STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../src/circularBuffer/CircularBuffer.hpp)
+# add_library(CircularBuffer STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/CircularBuffer.hpp)
 # target_include_directories(CircularBuffer INTERFACE 
 #     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 # )
 
-add_library(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/circularBuffer/CircularBuffer.hpp)
+add_library(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/CircularBuffer.hpp)
 target_link_libraries(CircularBuffer INTERFACE StrictBuild)
-target_include_directories(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/circularBuffer)
+target_include_directories(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer)
 
 add_executable(unitTests
     TestCircularBuffer.cpp

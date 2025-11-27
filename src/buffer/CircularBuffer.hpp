@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ICircularBuffer.hpp"
+
 #include <vector>
 #include <cstdint>
 #include <stdexcept>
@@ -9,7 +11,7 @@
 #include <array>
 
 template <size_t M>
-class CircularBuffer {    
+class CircularBuffer : public ICircularBuffer<M> {    
 private:
     static_assert(
         M > 0, 
