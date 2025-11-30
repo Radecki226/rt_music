@@ -2,108 +2,82 @@
 
 #include "ICircularBuffer.hpp"
 
-#include <vector>
-#include <cstdint>
 #include <stdexcept>
 #include <cstring>
 #include <algorithm>
 #include <mutex>
 #include <array>
+#include <complex>
+#include "Eigen/Dense"
+
+/**
+ * Implementation of Circular Buffer.
+ * For the time being covariance matrix doesn't perform mean before calculation.
+ * Data is supposed to have mean ~0.
+ */
 
 template <size_t M>
-class CircularBuffer : public ICircularBuffer<M> {    
+class CircularBuffer : public ICircularBuffer<M> {
 private:
     static_assert(
         M > 0, 
         "Error: Number of microphones can't be 0!"
     );
 
-    std::vector<int32_t> buffer_;
-    size_t capacityChunks_ = 0;    
-    size_t headChunk_ = 0;
-    bool isFull_ = false;
+    Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> matrix_;
+    Eigen::Matrix<std::complex<float>, M, M> cov_;
+
+    size_t headColumn_ = 0;
 
     mutable std::mutex accessMutex_;
 
 public:
-    explicit CircularBuffer(size_t initialCapacityChunks);
+    explicit CircularBuffer(size_t initialColumns);
 
-    void reconfig(size_t newCapacityChunks);
+    void reconfig(size_t newColumns);
 
-    void push(const std::array<int32_t, M> &chunk);
+    void push(const std::array<std::complex<float>, M> &column) override;
 
-    void get(size_t numChunksToGet, std::vector<int32_t>& destinationBuffer) const;
+    void calcCov() override;
 
-    size_t getCurrentSizeChunks() const;
+    const Eigen::Matrix<std::complex<float>, M, M>& getCov() const override {
+        return cov_;
+    }
 };
 
 template <size_t M>
-CircularBuffer<M>::CircularBuffer(size_t initialCapacityChunks) {
-    reconfig(initialCapacityChunks);
+CircularBuffer<M>::CircularBuffer(size_t initialColumns) {
+    reconfig(initialColumns);
 }
 
 template <size_t M>
-void CircularBuffer<M>::reconfig(size_t newCapacityChunks) {
-    if (newCapacityChunks == 0) {
-        throw std::invalid_argument("Capacity and M must be greater than zero.");
+void CircularBuffer<M>::reconfig(size_t newColumns) {
+    if (newColumns == 0) {
+        throw std::invalid_argument("N columns must be larger than 0!");
     }
 
     std::lock_guard<std::mutex> lock(accessMutex_);
 
-    capacityChunks_ = newCapacityChunks;
-    size_t totalElements = M * capacityChunks_;
+    matrix_.resize(M, newColumns);
+    matrix_.setZero();
 
-    buffer_.resize(totalElements);
-    std::memset(buffer_.data(), 0, sizeof(int32_t) * totalElements);
-
-    headChunk_ = 0;
-    isFull_ = false;
+    headColumn_ = 0;
 }
 
 template <size_t M>
-void CircularBuffer<M>::push(const std::array<int32_t, M> &array) {
+void CircularBuffer<M>::push(const std::array<std::complex<float>, M> &column) {
     std::lock_guard<std::mutex> lock(accessMutex_); 
 
-    size_t startIndex = headChunk_ * M;
+    Eigen::Map<const Eigen::Matrix<std::complex<float>, M, 1>> columnView(column.data(), column.size());
+    matrix_.col(headColumn_) = columnView;
 
-    std::copy(array.begin(), array.end(), buffer_.begin() + startIndex);
-
-    headChunk_ = (headChunk_ + 1) % capacityChunks_;
-
-    if (headChunk_ == 0 && !isFull_) {
-        isFull_ = true;
-    }
+    headColumn_ = (headColumn_ + 1) % matrix_.cols();
 }
 
-template <size_t M>
-void CircularBuffer<M>::get(size_t numChunksToGet, std::vector<int32_t>& destinationBuffer) const {
-    if (numChunksToGet*M > destinationBuffer.size() || numChunksToGet == 0) {
-        throw std::invalid_argument("Mismatch between buffer size and requested length!");
-    }
-
-    std::lock_guard<std::mutex> lock(accessMutex_); 
-
-    size_t currentSizeChunks = getCurrentSizeChunks();
-
-    if (numChunksToGet > currentSizeChunks) {
-        throw std::invalid_argument("Requested chunk bigger than circular buffer size");
-    }
-
-    size_t startIdx;
-    if (headChunk_ > numChunksToGet) {
-        startIdx = (headChunk_- numChunksToGet) * M;
-    } else {
-        startIdx = (capacityChunks_ - numChunksToGet + headChunk_) * M;
-    }
-
-    size_t capacityWords = capacityChunks_ * M;
-
-    for (size_t i = 0; i < numChunksToGet*M; i++) {
-        destinationBuffer[i] = buffer_[(startIdx+i) % capacityWords];
-    }
-}
 
 template <size_t M>
-size_t CircularBuffer<M>::getCurrentSizeChunks() const { 
-    return isFull_ ? capacityChunks_ : headChunk_;
+void CircularBuffer<M>::calcCov() {
+    std::lock_guard<std::mutex> lock(accessMutex_);
+
+    cov_ = matrix_ * matrix_.adjoint() / matrix_.cols();
 }

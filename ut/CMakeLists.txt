@@ -33,7 +33,10 @@ target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
 
 add_library(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/CircularBuffer.hpp)
 target_link_libraries(CircularBuffer INTERFACE StrictBuild)
-target_include_directories(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer)
+target_include_directories(CircularBuffer INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
+)
 
 add_executable(unitTests
     TestCircularBuffer.cpp

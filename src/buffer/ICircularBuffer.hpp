@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <cstdint>
 #include <array>
+#include "Eigen/Dense"
 
 template <size_t M>
 class ICircularBuffer {
@@ -10,15 +10,18 @@ public:
     virtual ~ICircularBuffer() = default;
 
     /**
-     * Push new chunk of data (M-len int32_t array) into the circular buffer.
-     * @param chunk Array of M int32_t samples to push into the buffer.
+     * Push new chunk of data (M-len float array) into the circular buffer.
+     * @param chunk Array of M float samples to push into the buffer.
      */
-    virtual void push(const std::array<int32_t, M> &chunk) = 0;
+    virtual void push(const std::array<std::complex<float>, M> &column) = 0;
 
     /**
-     * Get the most recent numChunksToGet chunks from the circular buffer.
-     * @param numChunksToGet Number of chunks to retrieve.
-     * @param destinationBuffer Vector to store the retrieved chunks.
+     * Calculate Covariance Matrix.
      */
-    virtual void get(size_t numChunksToGet, std::vector<int32_t>& destinationBuffer) const = 0;
+    virtual void calcCov() = 0;
+
+    /**
+     * Returns M by M calculated covariance matrix.
+     */
+    virtual const Eigen::Matrix<std::complex<float>, M, M>& getCov() const = 0;
 };
