@@ -25,7 +25,6 @@ private:
     );
 
     Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> matrix_;
-    Eigen::Matrix<std::complex<float>, M, M> cov_;
 
     size_t headColumn_ = 0;
 
@@ -38,11 +37,7 @@ public:
 
     void push(const std::array<std::complex<float>, M> &column) override;
 
-    void calcCov() override;
-
-    const Eigen::Matrix<std::complex<float>, M, M>& getCov() const override {
-        return cov_;
-    }
+    void calcCov(Eigen::Matrix<std::complex<float>, M, M>&) const override;
 };
 
 template <size_t M>
@@ -74,10 +69,7 @@ void CircularBuffer<M>::push(const std::array<std::complex<float>, M> &column) {
     headColumn_ = (headColumn_ + 1) % matrix_.cols();
 }
 
-
 template <size_t M>
-void CircularBuffer<M>::calcCov() {
-    std::lock_guard<std::mutex> lock(accessMutex_);
-
-    cov_ = matrix_ * matrix_.adjoint() / matrix_.cols();
+void CircularBuffer<M>::calcCov(Eigen::Matrix<std::complex<float>, M, M> &cov) const {
+    cov = matrix_ * matrix_.adjoint() / matrix_.cols();
 }

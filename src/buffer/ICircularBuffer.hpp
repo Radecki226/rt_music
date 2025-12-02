@@ -18,10 +18,5 @@ public:
     /**
      * Calculate Covariance Matrix.
      */
-    virtual void calcCov() = 0;
-
-    /**
-     * Returns M by M calculated covariance matrix.
-     */
-    virtual const Eigen::Matrix<std::complex<float>, M, M>& getCov() const = 0;
+    virtual void calcCov(Eigen::Matrix<std::complex<float>, M, M>&) const = 0;
 };
