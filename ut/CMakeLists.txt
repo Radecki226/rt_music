@@ -38,6 +38,13 @@ target_include_directories(CircularBuffer INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
 )
 
+add_library(DspMusic INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/dsp/DspMusic.hpp)
+target_link_libraries(DspMusic INTERFACE CircularBuffer StrictBuild)
+target_include_directories(DspMusic INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/dsp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
+)
+
 add_executable(unitTests
     TestCircularBuffer.cpp
 )
