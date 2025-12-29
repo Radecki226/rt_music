@@ -2,7 +2,7 @@
 #include <complex>
 #include <cmath>
 
-template <int N>
+template <size_t N>
 class ISteeringVectorModel {
 public:
     virtual ~ISteeringVectorModel() = default;

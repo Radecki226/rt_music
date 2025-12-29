@@ -1,4 +1,6 @@
-template <int N>
+#include "ISteeringVectorModel.hpp"
+
+template <size_t N>
 class UniformLinearArray : public ISteeringVectorModel<N> {
 public:
     explicit UniformLinearArray(float d_meters, float c = 343.0) 

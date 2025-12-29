@@ -1,6 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
 #include "DspMusic.hpp"
-#include <iostream>
 
 TEST_CASE( "DspMusic Construct", "[DspMusic]" ) {
     WHEN("Signal subspace dimension 0") {

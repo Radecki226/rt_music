@@ -47,14 +47,23 @@ target_include_directories(DspMusic INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
 )
 
+add_library(UniformLinearArray INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/steeringVector/UniformLinearArray.hpp)
+target_link_libraries(UniformLinearArray INTERFACE StrictBuild)
+target_include_directories(UniformLinearArray INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/steeringVector
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
+)
+
 add_executable(unitTests
     TestCircularBuffer.cpp
     TestDspMusic.cpp
+    TestUniformLinearArray.cpp
 )
 
 target_link_libraries(unitTests PRIVATE
     CircularBuffer
     DspMusic
+    UniformLinearArray
     Catch2::Catch2WithMain
     StrictBuild
 )
