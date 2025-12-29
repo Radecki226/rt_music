@@ -37,17 +37,18 @@ public:
 template <size_t M>
 void DspMusic<M>::computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &output,
                                     const Eigen::Matrix<std::complex<float>, M, M> &covMatrix) const {
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<std::complex<float>, M, M>> eigenSolver(covMatrix);
-
-    //TODO: implement some fallback
-    if (eigenSolver.info() != Eigen::Success) {
-        throw std::runtime_error("Eigen decomposition failed!");
-    }
 
     size_t noiseSubspaceDim = M - signalSubspaceDim_;
 
     if (output.cols() != noiseSubspaceDim) {
        throw std::invalid_argument("Output matrix has incorrect number of columns!");
+    }
+
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix<std::complex<float>, M, M>> eigenSolver(covMatrix);
+
+    //TODO: implement some fallback
+    if (eigenSolver.info() != Eigen::Success) {
+        throw std::runtime_error("Eigen decomposition failed!");
     }
 
     for (size_t i = 0; i < noiseSubspaceDim; ++i) {

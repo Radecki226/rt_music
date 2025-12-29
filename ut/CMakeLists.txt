@@ -16,6 +16,8 @@ set(STRICT_WARNINGS
     -Wextra
     -Wpedantic
     -Werror
+    -Wno-sign-compare
+    -Wno-psabi
 )
 set(ASAN_FLAGS 
     -fsanitize=address 
@@ -39,7 +41,7 @@ target_include_directories(CircularBuffer INTERFACE
 )
 
 add_library(DspMusic INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/dsp/DspMusic.hpp)
-target_link_libraries(DspMusic INTERFACE CircularBuffer StrictBuild)
+target_link_libraries(DspMusic INTERFACE StrictBuild)
 target_include_directories(DspMusic INTERFACE 
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/dsp
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
@@ -47,10 +49,12 @@ target_include_directories(DspMusic INTERFACE
 
 add_executable(unitTests
     TestCircularBuffer.cpp
+    TestDspMusic.cpp
 )
 
 target_link_libraries(unitTests PRIVATE
     CircularBuffer
+    DspMusic
     Catch2::Catch2WithMain
     StrictBuild
 )
