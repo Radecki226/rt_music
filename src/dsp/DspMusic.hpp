@@ -14,6 +14,10 @@ private:
     size_t signalSubspaceDim_;
 
 public:
+    /**
+     * Constructor for DspMusic class.
+     * @param signalSubspaceDim Effectively number of sources to be estimated.
+     */
     explicit DspMusic(size_t signalSubspaceDim) {
         reconfig(signalSubspaceDim);
     }
@@ -32,6 +36,8 @@ public:
 
     void computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &output,
                            const Eigen::Matrix<std::complex<float>, M, M> &covMatrix) const override;
+    float calculatePseudospectrum(const Eigen::Matrix<std::complex<float>, M, 1> &steeringVector,
+                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace) const override;
 };
 
 template <size_t M>
@@ -54,4 +60,19 @@ void DspMusic<M>::computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen:
     for (size_t i = 0; i < noiseSubspaceDim; ++i) {
         output.col(i) = eigenSolver.eigenvectors().col(i);
     }
+}
+
+template <size_t M>
+float DspMusic<M>::calculatePseudospectrum(const Eigen::Matrix<std::complex<float>, M, 1> &steeringVector,
+                                           const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace) const {
+
+    size_t noiseSubspaceDim = M - signalSubspaceDim_;
+    if (noiseSpace.cols() != noiseSubspaceDim) {
+        throw std::invalid_argument("Noise space matrix has incorrect number of columns!");
+    }
+
+    Eigen::Matrix<std::complex<float>, Eigen::Dynamic, 1> projection = noiseSpace.adjoint() * steeringVector;
+    float denom = projection.squaredNorm();
+
+    return denom;
 }

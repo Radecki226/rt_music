@@ -75,3 +75,29 @@ TEST_CASE("DspMusic Compute Noise Space", "[DspMusic]") {
         );
     }
 }
+
+TEST_CASE("DspMusic Calculate Pseudospectrum", "[DspMusic]") {
+    DspMusic<3> dspMusic(1);
+
+    using C = std::complex<float>;
+
+    Eigen::Matrix<std::complex<float>, 3, 1> steeringVector;
+    steeringVector << C(1.0, 0.0), C(0.0, 1.0), C(1.0, 0.0);
+
+    Eigen::Matrix<std::complex<float>, 3, Eigen::Dynamic> noiseSpace(3, 2);
+    noiseSpace << C(1.0, 0.0), C(0.0, 0.0), C(0.0, 0.0),
+                  C(1.0, 0.0), C(1.0, 0.0), C(1.0, 0.0);
+
+    WHEN("Proper noise space matrix size") {
+        float pseudospectrum = dspMusic.calculatePseudospectrum(steeringVector, noiseSpace);
+        REQUIRE(pseudospectrum == 6.0f);
+    }
+
+    WHEN("Improper noise space matrix size") {
+        Eigen::Matrix<std::complex<float>, 3, Eigen::Dynamic> badNoiseSpace(3, 1);
+        REQUIRE_THROWS_AS(
+            dspMusic.calculatePseudospectrum(steeringVector, badNoiseSpace),
+            std::invalid_argument
+        );
+    }
+}

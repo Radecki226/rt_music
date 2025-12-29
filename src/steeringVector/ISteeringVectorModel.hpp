@@ -7,5 +7,5 @@ class ISteeringVectorModel {
 public:
     virtual ~ISteeringVectorModel() = default;
 
-    virtual Eigen::Matrix<std::complex<float>, N, 1> getSteeringVector(float theta_rad, float frequency_hz) const = 0;
+    virtual Eigen::Matrix<std::complex<float>, N, 1> getSteeringVector(float thetaRad, float frequencyHz) const = 0;
 };
