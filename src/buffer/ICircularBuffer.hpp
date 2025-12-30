@@ -18,5 +18,5 @@ public:
     /**
      * Calculate Covariance Matrix.
      */
-    virtual void calcCov(Eigen::Matrix<std::complex<float>, M, M>&) const = 0;
+    virtual void calcCov(Eigen::Matrix<std::complex<float>, M, M>& covMatrix) const = 0;
 };

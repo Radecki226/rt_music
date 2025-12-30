@@ -33,6 +33,7 @@ target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
 #     ${CMAKE_CURRENT_SOURCE_DIR}/../src
 # )
 
+
 add_library(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/CircularBuffer.hpp)
 target_link_libraries(CircularBuffer INTERFACE StrictBuild)
 target_include_directories(CircularBuffer INTERFACE 
@@ -54,18 +55,36 @@ target_include_directories(UniformLinearArray INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
 )
 
+add_library(SingleFrequencySystem INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/SingleFrequencySystem.hpp)
+target_link_libraries(SingleFrequencySystem INTERFACE StrictBuild)
+target_include_directories(SingleFrequencySystem INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/system
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
+)
+
 add_executable(unitTests
     TestCircularBuffer.cpp
     TestDspMusic.cpp
     TestUniformLinearArray.cpp
+    TestSingleFrequencySystem.cpp
 )
 
 target_link_libraries(unitTests PRIVATE
     CircularBuffer
     DspMusic
     UniformLinearArray
+    SingleFrequencySystem
     Catch2::Catch2WithMain
     StrictBuild
+)
+
+# Expose trompeloeil headers to tests (header-only)
+target_include_directories(unitTests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ext/trompeloeil/include
+)
+
+target_compile_definitions(unitTests PRIVATE
+    TROMPELOEIL_BUILD_TESTS=yes
 )
 
 catch_discover_tests(unitTests)

@@ -1,9 +1,9 @@
-[submodule "ext/fff"]
-	path = ext/fff
-	url = git@github.com:meekrosoft/fff.git
 [submodule "ext/Catch2"]
 	path = ext/Catch2
 	url = git@github.com:catchorg/Catch2.git
 [submodule "ext/eigen"]
 	path = ext/eigen
 	url = https://gitlab.com/libeigen/eigen.git
+[submodule "ext/trompeloeil"]
+	path = ext/trompeloeil
+	url = git@github.com:rollbear/trompeloeil.git
