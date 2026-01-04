@@ -66,6 +66,18 @@ target_include_directories(SingleFrequencyGenerator INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/testEnv
 )
 
+add_library(SingleFrequencySystemIntegration INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/SingleFrequencySystemIntegration.hpp)
+target_link_libraries(SingleFrequencySystemIntegration INTERFACE StrictBuild)
+target_include_directories(SingleFrequencySystemIntegration INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/dsp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/steeringVector
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/system
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
+)
+
+
+
 add_executable(unitTests
     TestCircularBuffer.cpp
     TestDspMusic.cpp
@@ -80,6 +92,7 @@ target_link_libraries(unitTests PRIVATE
     UniformLinearArray
     SingleFrequencySystem
     SingleFrequencyGenerator
+    SingleFrequencySystemIntegration
     Catch2::Catch2WithMain
     StrictBuild
 )
