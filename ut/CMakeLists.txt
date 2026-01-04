@@ -28,12 +28,6 @@ target_compile_options(StrictBuild INTERFACE ${STRICT_WARNINGS} ${ASAN_FLAGS})
 target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
 
 
-# add_library(CircularBuffer STATIC ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/CircularBuffer.hpp)
-# target_include_directories(CircularBuffer INTERFACE 
-#     ${CMAKE_CURRENT_SOURCE_DIR}/../src
-# )
-
-
 add_library(CircularBuffer INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/CircularBuffer.hpp)
 target_link_libraries(CircularBuffer INTERFACE StrictBuild)
 target_include_directories(CircularBuffer INTERFACE 
@@ -58,8 +52,18 @@ target_include_directories(UniformLinearArray INTERFACE
 add_library(SingleFrequencySystem INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/system/SingleFrequencySystem.hpp)
 target_link_libraries(SingleFrequencySystem INTERFACE StrictBuild)
 target_include_directories(SingleFrequencySystem INTERFACE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/dsp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/steeringVector
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/system
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
+)
+
+add_library(SingleFrequencyGenerator INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/../src/testEnv/SingleFrequencyGenerator.hpp)
+target_link_libraries(SingleFrequencyGenerator INTERFACE StrictBuild)
+target_include_directories(SingleFrequencyGenerator INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/steeringVector
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src/testEnv
 )
 
 add_executable(unitTests
@@ -67,6 +71,7 @@ add_executable(unitTests
     TestDspMusic.cpp
     TestUniformLinearArray.cpp
     TestSingleFrequencySystem.cpp
+    TestSingleFrequencySystemIntegration.cpp
 )
 
 target_link_libraries(unitTests PRIVATE
@@ -74,6 +79,7 @@ target_link_libraries(unitTests PRIVATE
     DspMusic
     UniformLinearArray
     SingleFrequencySystem
+    SingleFrequencyGenerator
     Catch2::Catch2WithMain
     StrictBuild
 )
