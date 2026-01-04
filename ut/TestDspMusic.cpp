@@ -1,6 +1,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include "DspMusic.hpp"
 
+bool inTolerance(float a, float b, float tol) {
+    return (std::abs(a-b) < tol);
+}
+
 TEST_CASE( "DspMusic Construct", "[DspMusic]" ) {
     WHEN("Signal subspace dimension 0") {
         REQUIRE_THROWS_AS(
@@ -90,7 +94,7 @@ TEST_CASE("DspMusic Calculate Pseudospectrum", "[DspMusic]") {
 
     WHEN("Proper noise space matrix size") {
         float pseudospectrum = dspMusic.calculatePseudospectrum(steeringVector, noiseSpace);
-        REQUIRE(pseudospectrum == 6.0f);
+        REQUIRE(inTolerance(pseudospectrum, (1.0f / 6.0f), (float)1e-9));
     }
 
     WHEN("Improper noise space matrix size") {

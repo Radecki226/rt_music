@@ -72,7 +72,8 @@ float DspMusic<M>::calculatePseudospectrum(const Eigen::Matrix<std::complex<floa
     }
 
     Eigen::Matrix<std::complex<float>, Eigen::Dynamic, 1> projection = noiseSpace.adjoint() * steeringVector;
-    float denom = projection.squaredNorm();
+    const float epsilon = 1e-9;
+    float denom = projection.squaredNorm() + epsilon;
 
-    return denom;
+    return 1.0f / denom;
 }
