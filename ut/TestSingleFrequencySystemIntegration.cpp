@@ -15,7 +15,7 @@ TEST_CASE( "SingleFrequencySystemIntegration check peak", "[SingleFrequencySyste
     constexpr size_t M = 4;
 
     struct SingleFrequencyGeneratorConfig generatorConfig = {
-        .snr = 20.0f,
+        .snr = 30.0f,
         .thetaRad = M_PI / 4.0f,
         .frequency = frequencyHz
     };
@@ -24,10 +24,10 @@ TEST_CASE( "SingleFrequencySystemIntegration check peak", "[SingleFrequencySyste
         .singleFrequencySystemConfig = {
             .frequencyHz = frequencyHz,
             .nAngles = 360,
-            .computeIntervalFrames = 1,
+            .computeIntervalFrames = 5,
             .nSources = 1
         },
-        .nAveragingFrames = 10,
+        .nAveragingFrames = 5,
         .spacingMeters = spacingMeters
     };
 
@@ -36,5 +36,28 @@ TEST_CASE( "SingleFrequencySystemIntegration check peak", "[SingleFrequencySyste
     SingleFrequencySystemIntegration<M> system(systemConfig);
 
     std::array<std::complex<float>, M> inputFrame = signalGenerator.generateInput();
-    REQUIRE(inputFrame.size() == M);
+
+    //Print input frame
+    REQUIRE(system.processFrame(inputFrame) == false);
+    REQUIRE(system.processFrame(inputFrame) == false);
+    REQUIRE(system.processFrame(inputFrame) == false);
+    REQUIRE(system.processFrame(inputFrame) == false);
+    REQUIRE(system.processFrame(inputFrame) == true);
+
+    const Eigen::Matrix<float, Eigen::Dynamic, 1>& pseudospectrum = system.getPseudospectrum();
+    REQUIRE(pseudospectrum.size() == systemConfig.singleFrequencySystemConfig.nAngles);
+
+    //Print pseudospectrum values
+    size_t peakIndex = 0;
+    float peakValue = 0.0f;
+    for (size_t i = 0; i < pseudospectrum.size(); ++i) {
+        if (pseudospectrum(i) > peakValue) {
+            peakValue = pseudospectrum(i);
+            peakIndex = i;
+        }
+    }
+    float angleStepRad = (2.0f * M_PI) / static_cast<float>(systemConfig.singleFrequencySystemConfig.nAngles);
+    float estimatedAngleRad = peakIndex * angleStepRad;
+
+    REQUIRE(std::abs(estimatedAngleRad - generatorConfig.thetaRad) < angleStepRad);
 }
