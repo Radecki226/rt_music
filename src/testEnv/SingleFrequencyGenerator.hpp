@@ -16,8 +16,8 @@ struct SingleFrequencyGeneratorConfig {
 template<size_t M>
 class SingleFrequencyGenerator {
 private:
-    SingleFrequencyGeneratorConfig config;
     ISteeringVectorModel<M> &device;
+    SingleFrequencyGeneratorConfig config;
     
     std::mt19937 gen{std::random_device{}()};
 

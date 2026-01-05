@@ -1,3 +1,4 @@
+#pragma once
 #include "ISteeringVectorModel.hpp"
 
 template <size_t M>
