@@ -7,3 +7,19 @@
 [submodule "ext/trompeloeil"]
 	path = ext/trompeloeil
 	url = git@github.com:rollbear/trompeloeil.git
+[submodule "yocto/poky"]
+	path = yocto/poky
+	url = git://git.yoctoproject.org/poky.git
+	branch = scarthgap
+[submodule "yocto/meta-ti"]
+	path = yocto/meta-ti
+	url = git@github.com:TexasInstruments/meta-ti.git
+	branch = scarthgap
+[submodule "yocto/meta-arm"]
+	path = yocto/meta-arm
+	url = git://git.yoctoproject.org/meta-arm
+	branch = scarthgap
+[submodule "yocto/meta-openembedded"]
+	path = yocto/meta-openembedded
+	url = git://git.openembedded.org/meta-openembedded
+	branch = scarthgap

@@ -20,3 +20,12 @@ mkdir ut/build && cd ut/build
 cmake -GNinja ..
 ninja && ctest -R ".*"
 ```
+
+### Yocto
+```
+source poky/oe-init-build-env
+bitbake-layers add-layer ../meta-arm/meta-arm-toolchain
+bitbake-layers add-layer ../meta-arm/meta-arm
+bitbake-layers add-layer ../meta-ti/meta-ti-bsp
+bitbake-layers add-layer ../meta-music
+```
