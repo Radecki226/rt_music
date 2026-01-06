@@ -24,7 +24,7 @@ public:
                                              const Eigen::Matrix<std::complex<float>, 4, 4>&), override);
 
 
-    MAKE_CONST_MOCK2(calculatePseudospectrum, float(const Eigen::Matrix<std::complex<float>, 4, 1>&,
+    MAKE_MOCK2(calculatePseudospectrum, float(const Eigen::Matrix<std::complex<float>, 4, 1>&,
                                                      const Eigen::Matrix<std::complex<float>, 4, Eigen::Dynamic>&), override);
 };
 
