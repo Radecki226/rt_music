@@ -29,3 +29,8 @@ bitbake-layers add-layer ../meta-arm/meta-arm
 bitbake-layers add-layer ../meta-ti/meta-ti-bsp
 bitbake-layers add-layer ../meta-music
 ```
+
+Then choose correct machine in your local.conf
+```
+MACHINE ?= "beagleplay-ti"
+```
