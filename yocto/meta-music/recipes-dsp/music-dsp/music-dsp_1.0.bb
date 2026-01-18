@@ -4,21 +4,20 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 
 DEPENDS = "libeigen"
 
-# Use the 'FILESEXTRAPATHS' variable to tell BitBake where to look for files
-# This adds your project root to the search path
+# This looks back to your project root
 FILESEXTRAPATHS:prepend := "${THISDIR}/../../../../:"
 
-# Now you can list the files simply by name
-SRC_URI = " \
-    file://CMakeLists.txt \
-    file://src/ \
-"
+# Pull in the entire src directory
+# Yocto will preserve the internal structure (src/lib/...)
+SRC_URI = "file://src/"
 
-# Set S to WORKDIR because CMakeLists.txt is copied to the top of WORKDIR
-S = "${WORKDIR}"
+# Set S to the location of your CMakeLists.txt
+# Since you moved it to src/lib, S must match that path
+S = "${WORKDIR}/src/lib"
 
 inherit cmake
 
+# Standard dev files configuration
 FILES:${PN}-dev = " \
     ${includedir}/music-dsp/*.hpp \
     ${includedir}/music-dsp \

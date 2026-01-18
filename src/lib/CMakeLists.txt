@@ -8,15 +8,15 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 find_package(Eigen3 REQUIRED)
 
 add_library(MusicDsp SHARED 
-    src/lib/musicDsp.cpp
+    musicDsp.cpp
 )
 
 target_include_directories(MusicDsp PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/lib>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/buffer>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src//dsp>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/steeringVector>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/system>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../buffer>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..//dsp>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../steeringVector>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../system>
     $<INSTALL_INTERFACE:include/music-dsp>
 )
 
@@ -37,6 +37,6 @@ install(TARGETS MusicDsp
 
 # Install the header files so you can build apps against the library later
 install(FILES 
-    src/lib/musicDsp.hpp 
+    musicDsp.hpp 
     DESTINATION include/music-dsp
 )

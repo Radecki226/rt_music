@@ -12,18 +12,19 @@ int main() {
     frame[0] = {1.0f, 0.5f};
     frame[1] = {0.8f, 0.3f};
 
-    // 1. Process the frame
-    bool success = musicDsp_processFrame(frame);
-    
-    if (success) {
-        std::cout << "DSP Processing Successful!" << std::endl;
+    for (int i = 0; i < 10000; i++) {
+        bool success = musicDsp_processFrame(frame);
         
-        // 2. Get the results
-        const auto& spectrum = musicDsp_getPseudospectrum();
-        std::cout << "Pseudospectrum size: " << spectrum.size() << std::endl;
-        std::cout << "First 5 values: " << spectrum.head(5).transpose() << std::endl;
-    } else {
-        std::cerr << "DSP Processing failed (Wait for more frames?)" << std::endl;
+        if (success) {
+            std::cout << "DSP Processing Successful!" << std::endl;
+            
+            // 2. Get the results
+            const auto& spectrum = musicDsp_getPseudospectrum();
+            std::cout << "Pseudospectrum size: " << spectrum.size() << std::endl;
+            std::cout << "First 5 values: " << spectrum.head(5).transpose() << std::endl;
+        } else {
+            std::cerr << "DSP Processing failed (Wait for more frames?)" << std::endl;
+        }
     }
 
     return 0;
