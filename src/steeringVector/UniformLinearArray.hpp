@@ -12,7 +12,7 @@ public:
 
         float lambda = speedOfSound / frequency_hz;
         float k = 2.0 * M_PI / lambda;
-        
+
         // Phase shift between adjacent elements: delta_phi = k * d * sin(theta)
         // We use sin(theta) assuming theta=0 is boresight (perpendicular to array)
         std::complex<float> phase_step = std::exp(std::complex<float>(0, k * d * std::sin(theta_rad)));

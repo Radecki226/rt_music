@@ -1,3 +1,5 @@
 .vscode/settings.json
 ut/build
 yocto/build
+precompute_steering_vectors/build
+data/steering_vectors/steering_vectors.hpp

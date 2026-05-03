@@ -14,6 +14,11 @@ cmake -B Build -S . -DBUILD_TESTING=OFF
 sudo cmake --build Build/ --target install
 ```
 
+### Precompute arrays
+```
+./precompute_steering_vectors/generate_steering_vectors.sh
+```
+
 ### Build ut
 ```
 mkdir ut/build && cd ut/build
