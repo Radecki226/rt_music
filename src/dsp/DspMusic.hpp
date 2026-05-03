@@ -15,6 +15,7 @@ private:
 
     Eigen::Matrix<std::complex<float>, Eigen::Dynamic, M> noiseSpaceAdjont_;
     Eigen::Matrix<std::complex<float>, Eigen::Dynamic, 1> projection_;
+    Eigen::Matrix<std::complex<float>, Eigen::Dynamic, Eigen::Dynamic> projections_;
 
 public:
     /**
@@ -45,8 +46,9 @@ public:
 
     void computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &output,
                            const Eigen::Matrix<std::complex<float>, M, M> &covMatrix) const override;
-    float calculatePseudospectrum(const Eigen::Matrix<std::complex<float>, M, 1> &steeringVector,
-                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace) override;
+    Eigen::Matrix<float, Eigen::Dynamic, 1> calculatePseudospectrumBatch(
+                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &steeringVectors,
+                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace);
 };
 
 template <size_t M>
@@ -70,18 +72,26 @@ void DspMusic<M>::computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen:
 }
 
 template <size_t M>
-float DspMusic<M>::calculatePseudospectrum(const Eigen::Matrix<std::complex<float>, M, 1> &steeringVector,
-                                           const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace) {
+Eigen::Matrix<float, Eigen::Dynamic, 1> DspMusic<M>::calculatePseudospectrumBatch(
+                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &steeringVectors,
+                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace) {
 
     if (noiseSpace.cols() != noiseSubspaceDim_) {
         throw std::invalid_argument("Noise space matrix has incorrect number of columns!");
     }
 
+    size_t nAngles = steeringVectors.cols();
+    
     noiseSpaceAdjont_ = noiseSpace.adjoint();
-
-    projection_.noalias() = noiseSpaceAdjont_ * steeringVector;
+    projections_.noalias() = noiseSpaceAdjont_ * steeringVectors;
+    
+    Eigen::Matrix<float, Eigen::Dynamic, 1> pseudospectrum(nAngles);
     const float epsilon = 1e-9;
-    float denom = projection_.squaredNorm() + epsilon;
+    
+    for (size_t i = 0; i < nAngles; ++i) {
+        float denom = projections_.col(i).squaredNorm() + epsilon;
+        pseudospectrum(i) = 1.0f / denom;
+    }
 
-    return 1.0f / denom;
+    return pseudospectrum;
 }

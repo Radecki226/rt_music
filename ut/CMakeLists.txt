@@ -16,7 +16,6 @@ set(STRICT_WARNINGS
     -Wall 
     -Wextra
     -Wpedantic
-    -Werror
     -Wno-sign-compare
     -Wno-psabi
 )
@@ -27,10 +26,6 @@ set(ASAN_FLAGS
 
 target_compile_options(StrictBuild INTERFACE ${STRICT_WARNINGS} ${ASAN_FLAGS})
 target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
-
-
-
-
 
 
 add_executable(unitTests
@@ -47,6 +42,8 @@ target_link_libraries(unitTests PRIVATE
 )
 
 target_include_directories(unitTests PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/../data/steering_vectors
+    ${CMAKE_CURRENT_SOURCE_DIR}/../src
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/dsp
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/steeringVector

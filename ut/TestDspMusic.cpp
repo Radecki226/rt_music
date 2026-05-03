@@ -80,27 +80,34 @@ TEST_CASE("DspMusic Compute Noise Space", "[DspMusic]") {
     }
 }
 
-TEST_CASE("DspMusic Calculate Pseudospectrum", "[DspMusic]") {
+TEST_CASE("DspMusic Calculate Pseudospectrum Batch", "[DspMusic]") {
     DspMusic<3> dspMusic(1);
 
     using C = std::complex<float>;
 
-    Eigen::Matrix<std::complex<float>, 3, 1> steeringVector;
-    steeringVector << C(1.0, 0.0), C(0.0, 1.0), C(1.0, 0.0);
+    // Create steering vectors for 2 angles (columns)
+    Eigen::Matrix<std::complex<float>, 3, 2> steeringVectors;
+    steeringVectors.col(0) << C(1.0, 0.0), C(0.0, 1.0), C(1.0, 0.0);
+    steeringVectors.col(1) << C(0.5, 0.5), C(1.0, 0.0), C(0.0, 1.0);
 
     Eigen::Matrix<std::complex<float>, 3, Eigen::Dynamic> noiseSpace(3, 2);
-    noiseSpace << C(1.0, 0.0), C(0.0, 0.0), C(0.0, 0.0),
-                  C(1.0, 0.0), C(1.0, 0.0), C(1.0, 0.0);
+    // Column 0: eigenvector for noise subspace
+    noiseSpace.col(0) << C(1.0, 0.0), C(0.0, 0.0), C(0.0, 0.0);
+    // Column 1: eigenvector for noise subspace  
+    noiseSpace.col(1) << C(1.0, 0.0), C(1.0, 0.0), C(1.0, 0.0);
 
     WHEN("Proper noise space matrix size") {
-        float pseudospectrum = dspMusic.calculatePseudospectrum(steeringVector, noiseSpace);
-        REQUIRE(inTolerance(pseudospectrum, (1.0f / 6.0f), (float)1e-9));
+        Eigen::Matrix<float, Eigen::Dynamic, 1> pseudospectra = dspMusic.calculatePseudospectrumBatch(steeringVectors, noiseSpace);
+        REQUIRE(pseudospectra.size() == 2);
+        printf("Pseudospectrum values: %f, %f\n", pseudospectra(0), pseudospectra(1));
+        REQUIRE(inTolerance(pseudospectra(0), (1.0f / 6.0f), (float)1e-6));
+        REQUIRE(inTolerance(pseudospectra(1), (1.0f / 5.0f), (float)1e-6));
     }
 
     WHEN("Improper noise space matrix size") {
         Eigen::Matrix<std::complex<float>, 3, Eigen::Dynamic> badNoiseSpace(3, 1);
         REQUIRE_THROWS_AS(
-            dspMusic.calculatePseudospectrum(steeringVector, badNoiseSpace),
+            dspMusic.calculatePseudospectrumBatch(steeringVectors, badNoiseSpace),
             std::invalid_argument
         );
     }

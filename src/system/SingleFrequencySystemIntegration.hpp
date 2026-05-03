@@ -1,14 +1,18 @@
 #pragma once
 #include "CircularBuffer.hpp"
 #include "DspMusic.hpp"
-#include "UniformLinearArray.hpp"
 #include "SingleFrequencySystem.hpp"
+#include "MusicConstants.hpp"
+
+/**
+ * Single frequency system. Supports 1187.5Hz frequency.
+ * Mainly for test purpose.
+ */
 
 struct SingleFrequencySystemIntegrationConfig {
-    struct SingleFrequencySystemConfig singleFrequencySystemConfig;
-
+    size_t computeIntervalFrames;
+    size_t nSources;
     size_t nAveragingFrames;
-    float  spacingMeters;
 };
 
 template <size_t M>
@@ -18,15 +22,19 @@ private:
 
     CircularBuffer<M> circularBuffer_;
     DspMusic<M> dspMusic_;
-    UniformLinearArray<M> uniformLinearArray_;
     SingleFrequencySystem<M> singleFrequencySystem_;
 
 public:
     SingleFrequencySystemIntegration(struct SingleFrequencySystemIntegrationConfig config) :
         circularBuffer_(config.nAveragingFrames),
         dspMusic_(nSourcesFixed),
-        uniformLinearArray_(config.spacingMeters),
-        singleFrequencySystem_(config.singleFrequencySystemConfig, circularBuffer_, uniformLinearArray_, dspMusic_) {}
+        singleFrequencySystem_({
+            .frequencyIdx = 15,
+            .nAngles = MusicConstants::n_angles,
+            .computeIntervalFrames = config.computeIntervalFrames,
+            .nSources = config.nSources
+        }, circularBuffer_, dspMusic_) {
+    }
 
     bool processFrame(const std::array<std::complex<float>, M> &frame) {
         return singleFrequencySystem_.processFrame(frame);

@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 #include "ICircularBuffer.hpp"
-#include "ISteeringVectorModel.hpp"
+#include "steering_vectors.hpp"
 #include "IDspMusic.hpp"
 #include <optional>
 #include <vector>
@@ -11,7 +11,7 @@
 
 struct SingleFrequencySystemConfig {
     /*Frequency to be analyzed in Hz*/
-    float frequencyHz;
+    size_t frequencyIdx;
 
     /*Angle resolution in radians for the MUSIC spectrum*/
     size_t nAngles;
@@ -29,25 +29,20 @@ private:
     SingleFrequencySystemConfig config_;
 
     ICircularBuffer<M> &circularBuffer_;
-    ISteeringVectorModel<M>& steeringVectorModel_;
     IDspMusic<M> &dspMusic_;
 
     Eigen::Matrix<std::complex<float>, M, M> covMatrix_;
     Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> noiseSpace_;
     Eigen::Matrix<float, Eigen::Dynamic, 1> pseudospectrum_;
 
-    //TODO: Potentially optimize to use vector ops
-    std::vector<float> thetaAngles_;
-
     size_t frameCounter_ = 0;
 
 public:
     explicit SingleFrequencySystem(const SingleFrequencySystemConfig &config, 
                                    ICircularBuffer<M> &circularBuffer,
-                                   ISteeringVectorModel<M> &steeringVectorModel, 
                                    IDspMusic<M> &dspMusic) : config_(config),
                                    circularBuffer_(circularBuffer), 
-                                   steeringVectorModel_(steeringVectorModel), dspMusic_(dspMusic) {
+                                   dspMusic_(dspMusic) {
         covMatrix_.setZero();
 
         noiseSpace_.resize(M, M - config.nSources);
@@ -55,12 +50,6 @@ public:
 
         pseudospectrum_.resize(config.nAngles);
         pseudospectrum_.setZero();
-
-        float angleStepRad = (2.0f * M_PI) / static_cast<float>(config.nAngles);
-        for (size_t i = 0; i < config.nAngles; ++i) {
-            float theta = i * angleStepRad;
-            thetaAngles_.push_back(theta);
-        }
     }
 
     /**
@@ -80,12 +69,9 @@ public:
         circularBuffer_.calcCov(covMatrix_);
         dspMusic_.computeNoiseSpace(noiseSpace_, covMatrix_);
 
-        for (size_t i = 0; i < config_.nAngles; ++i) {
-            Eigen::Matrix<std::complex<float>, M, 1> steeringVector =
-                steeringVectorModel_.getSteeringVector(thetaAngles_[i], config_.frequencyHz);
-            float psValue = dspMusic_.calculatePseudospectrum(steeringVector, noiseSpace_);
-            pseudospectrum_(i) = psValue;
-        }
+        Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> steeringVectors = steering_vectors[config_.frequencyIdx].transpose();
+        pseudospectrum_ = dspMusic_.calculatePseudospectrumBatch(steeringVectors, noiseSpace_);
+
         return true;
     }
 
