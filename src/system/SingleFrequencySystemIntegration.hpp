@@ -27,7 +27,7 @@ private:
 public:
     SingleFrequencySystemIntegration(struct SingleFrequencySystemIntegrationConfig config) :
         circularBuffer_(config.nAveragingFrames),
-        dspMusic_(nSourcesFixed),
+        dspMusic_(nSourcesFixed, MusicConstants::n_angles),
         singleFrequencySystem_({
             .frequencyIdx = 15,
             .nAngles = MusicConstants::n_angles,

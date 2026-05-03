@@ -6,11 +6,11 @@
 int main() {
     std::cout << "Initializing Music DSP Test App..." << std::endl;
 
-    // Create a dummy frame for 2 microphones (nMic_ = 2)
-    // In a real scenario, this data comes from your audio DMA/ADC
-    std::array<std::complex<float>, 2> frame;
+    std::array<std::complex<float>, musicDsp_nMic> frame{};
     frame[0] = {1.0f, 0.5f};
     frame[1] = {0.8f, 0.3f};
+    frame[2] = {0.2f, 0.1f};
+    frame[3] = {-0.1f, 0.4f};
 
     for (int i = 0; i < 10000; i++) {
         bool success = musicDsp_processFrame(frame);

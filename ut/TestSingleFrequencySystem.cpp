@@ -15,11 +15,14 @@ public:
 class MockDspMusic : public IDspMusic<MusicConstants::M> {
 public:
     using PseudospectrumVector = Eigen::Matrix<float, Eigen::Dynamic, 1>;
+    using PseudospectrumOut = Eigen::Ref<PseudospectrumVector>;
     using ComplexDynamicMatrix = Eigen::Matrix<std::complex<float>, MusicConstants::M, Eigen::Dynamic>;
 
     MAKE_CONST_MOCK2(computeNoiseSpace, void(ComplexDynamicMatrix&, const Eigen::Matrix<std::complex<float>, MusicConstants::M, MusicConstants::M>&), override);
 
-    MAKE_MOCK2(calculatePseudospectrumBatch, PseudospectrumVector(const ComplexDynamicMatrix&, const ComplexDynamicMatrix&), override);
+    MAKE_MOCK3(calculatePseudospectrumBatch,
+               void(const ComplexDynamicMatrix&, const ComplexDynamicMatrix&, PseudospectrumOut),
+               override);
 };
 
 static MockCircularBuffer mockCircularBuffer;
@@ -51,9 +54,9 @@ TEST_CASE( "SingleFrequencySystem check", "[SingleFrequencySystem]" ) {
         .TIMES(1);
     
     // Note: No call to getSteeringVector - using precomputed steering vectors instead
-    REQUIRE_CALL(mockDspMusic, calculatePseudospectrumBatch(trompeloeil::_, trompeloeil::_))
+    REQUIRE_CALL(mockDspMusic, calculatePseudospectrumBatch(trompeloeil::_, trompeloeil::_, trompeloeil::_))
         .TIMES(1)
-        .RETURN(Eigen::Matrix<float, Eigen::Dynamic, 1>::Constant(config.nAngles, 13.0f));
+        .SIDE_EFFECT(_3.setConstant(13.0f));
 
     REQUIRE(system.processFrame(sample) == false);
     REQUIRE(system.processFrame(sample) == false);

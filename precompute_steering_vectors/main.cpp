@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <array>
-#include "UniformLinearArray.hpp"
+#include "UniformPlanarSquareArray.hpp"
 #include "../src/MusicConstants.hpp"
 
 namespace fs = std::filesystem;
@@ -22,8 +22,8 @@ int main(int argc, char* argv[]) {
     fs::path output_dir = "steering_vectors";
     fs::create_directories(output_dir);
 
-    // Create steering vector model
-    UniformLinearArray<M> ula(spacing_meters, speed_of_sound);
+    // Create steering vector model (N×N square grid, row-major mic index)
+    UniformPlanarSquareArray<M> uniformPlanarSquareArray(spacing_meters, speed_of_sound);
 
     // Generate angles: 0 to 2π
     std::vector<float> angles(n_angles);
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
             Eigen::Matrix<std::complex<float>, Eigen::Dynamic, Eigen::Dynamic> steering_matrix(n_angles, M);
 
             for (size_t angle_idx = 0; angle_idx < n_angles; ++angle_idx) {
-                auto steering_vec = ula.getSteeringVector(angles[angle_idx], frequency);
+                auto steering_vec = uniformPlanarSquareArray.getSteeringVector(angles[angle_idx], frequency);
                 for (size_t mic_idx = 0; mic_idx < M; ++mic_idx) {
                     steering_matrix(angle_idx, mic_idx) = steering_vec(mic_idx);
                 }

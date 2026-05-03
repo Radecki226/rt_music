@@ -1,18 +1,14 @@
 #include "musicDsp.hpp"
+#include "MusicConstants.hpp"
 #include "SingleFrequencySystemIntegration.hpp"
 
-static SingleFrequencySystemIntegrationConfig config_  = {
-    .singleFrequencySystemConfig = {
-        .frequencyHz = 1000,
-        .nAngles = 360,
-        .computeIntervalFrames = 10,
-        .nSources = 1
-    },
+static SingleFrequencySystemIntegrationConfig config_ = {
+    .computeIntervalFrames = 10,
+    .nSources = 1,
     .nAveragingFrames = 10,
-    .spacingMeters = 0.05f
 };
 
-static SingleFrequencySystemIntegration<musicDsp_nMic> integration_(config_);
+static SingleFrequencySystemIntegration<MusicConstants::M> integration_(config_);
 
 bool musicDsp_processFrame(const std::array<std::complex<float>, musicDsp_nMic> &frame) {
     return integration_.processFrame(frame);

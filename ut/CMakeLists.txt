@@ -31,7 +31,7 @@ target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
 add_executable(unitTests
     TestCircularBuffer.cpp
     TestDspMusic.cpp
-    TestUniformLinearArray.cpp
+    TestUniformPlanarSquareArray.cpp
     TestSingleFrequencySystem.cpp
     TestSingleFrequencySystemIntegration.cpp
 )
