@@ -1,6 +1,6 @@
 # Steering Vector Precomputation Tool
 
-This tool precomputes steering vectors for a uniform linear array with 4 microphones, generating data for 256 uniformly distributed angles and 32 frequencies in the range 687.5 Hz to 1687.5 Hz.
+This tool precomputes steering vectors for a **uniform planar square** array (2×2 microphones, row-major indexing), generating data for 256 uniformly distributed angles and 32 frequencies in the range 687.5 Hz to 1687.5 Hz.
 
 ## Parameters
 

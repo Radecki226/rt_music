@@ -2,6 +2,7 @@
 #include "Eigen/Dense"
 #include "IDspMusic.hpp"
 #include "ICircularBuffer.hpp"
+#include <stdexcept>
 
 template <size_t M>
 class DspMusic : public IDspMusic<M> {
@@ -11,22 +12,22 @@ private:
         "Error: Number of microphones can't be 0!"
     );
 
-    size_t noiseSubspaceDim_;
+    size_t noiseSubspaceDim_{};
+    size_t nAngles_{};
 
     Eigen::Matrix<std::complex<float>, Eigen::Dynamic, M> noiseSpaceAdjont_;
-    Eigen::Matrix<std::complex<float>, Eigen::Dynamic, 1> projection_;
     Eigen::Matrix<std::complex<float>, Eigen::Dynamic, Eigen::Dynamic> projections_;
 
 public:
     /**
-     * Constructor for DspMusic class.
      * @param signalSubspaceDim Effectively number of sources to be estimated.
+     * @param nAngles Number of steering-vector columns (angle grid size); buffers are sized here.
      */
-    explicit DspMusic(size_t signalSubspaceDim) {
-        reconfig(signalSubspaceDim);
+    explicit DspMusic(size_t signalSubspaceDim, size_t nAngles) {
+        reconfig(signalSubspaceDim, nAngles);
     }
 
-    void reconfig(size_t newSignalSubspaceDim) {
+    void reconfig(size_t newSignalSubspaceDim, size_t nAngles) {
         if (newSignalSubspaceDim == 0) {
             throw std::invalid_argument("Signal Subspace Dimension must be larger than 0!");
         }
@@ -35,20 +36,26 @@ public:
             throw std::invalid_argument("Signal Subspace Dimension must be less than number of microphones!");
         }
 
+        if (nAngles == 0) {
+            throw std::invalid_argument("nAngles must be larger than 0!");
+        }
+
         noiseSubspaceDim_ = M - newSignalSubspaceDim;
+        nAngles_ = nAngles;
 
         noiseSpaceAdjont_.resize(noiseSubspaceDim_, M);
         noiseSpaceAdjont_.setZero();
 
-        projection_.resize(noiseSubspaceDim_, 1);
-        projection_.setZero();
+        projections_.resize(noiseSubspaceDim_, nAngles_);
+        projections_.setZero();
     }
 
     void computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &output,
                            const Eigen::Matrix<std::complex<float>, M, M> &covMatrix) const override;
-    Eigen::Matrix<float, Eigen::Dynamic, 1> calculatePseudospectrumBatch(
-                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &steeringVectors,
-                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace);
+    void calculatePseudospectrumBatch(
+        const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &steeringVectors,
+        const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace,
+        Eigen::Ref<Eigen::Matrix<float, Eigen::Dynamic, 1>> pseudospectrumOut) override;
 };
 
 template <size_t M>
@@ -72,26 +79,30 @@ void DspMusic<M>::computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen:
 }
 
 template <size_t M>
-Eigen::Matrix<float, Eigen::Dynamic, 1> DspMusic<M>::calculatePseudospectrumBatch(
-                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &steeringVectors,
-                                  const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace) {
+void DspMusic<M>::calculatePseudospectrumBatch(
+    const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &steeringVectors,
+    const Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> &noiseSpace,
+    Eigen::Ref<Eigen::Matrix<float, Eigen::Dynamic, 1>> pseudospectrumOut) {
 
     if (noiseSpace.cols() != noiseSubspaceDim_) {
         throw std::invalid_argument("Noise space matrix has incorrect number of columns!");
     }
 
-    size_t nAngles = steeringVectors.cols();
-    
-    noiseSpaceAdjont_ = noiseSpace.adjoint();
-    projections_.noalias() = noiseSpaceAdjont_ * steeringVectors;
-    
-    Eigen::Matrix<float, Eigen::Dynamic, 1> pseudospectrum(nAngles);
-    const float epsilon = 1e-9;
-    
-    for (size_t i = 0; i < nAngles; ++i) {
-        float denom = projections_.col(i).squaredNorm() + epsilon;
-        pseudospectrum(i) = 1.0f / denom;
+    if (static_cast<size_t>(steeringVectors.cols()) != nAngles_) {
+        throw std::invalid_argument("Steering vector column count does not match configured nAngles!");
     }
 
-    return pseudospectrum;
+    if (pseudospectrumOut.size() != static_cast<Eigen::Index>(nAngles_)) {
+        throw std::invalid_argument("Output pseudospectrum length does not match configured nAngles!");
+    }
+
+    noiseSpaceAdjont_ = noiseSpace.adjoint();
+    projections_.noalias() = noiseSpaceAdjont_ * steeringVectors;
+
+    const float epsilon = 1e-9;
+
+    for (size_t i = 0; i < nAngles_; ++i) {
+        const float denom = projections_.col(static_cast<Eigen::Index>(i)).squaredNorm() + epsilon;
+        pseudospectrumOut(static_cast<Eigen::Index>(i)) = 1.0f / denom;
+    }
 }

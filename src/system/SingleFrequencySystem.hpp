@@ -34,6 +34,7 @@ private:
     Eigen::Matrix<std::complex<float>, M, M> covMatrix_;
     Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> noiseSpace_;
     Eigen::Matrix<float, Eigen::Dynamic, 1> pseudospectrum_;
+    Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> steeringVectors_;
 
     size_t frameCounter_ = 0;
 
@@ -50,6 +51,8 @@ public:
 
         pseudospectrum_.resize(config.nAngles);
         pseudospectrum_.setZero();
+
+        steeringVectors_ = steering_vectors[config_.frequencyIdx].transpose();
     }
 
     /**
@@ -69,8 +72,7 @@ public:
         circularBuffer_.calcCov(covMatrix_);
         dspMusic_.computeNoiseSpace(noiseSpace_, covMatrix_);
 
-        Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> steeringVectors = steering_vectors[config_.frequencyIdx].transpose();
-        pseudospectrum_ = dspMusic_.calculatePseudospectrumBatch(steeringVectors, noiseSpace_);
+        dspMusic_.calculatePseudospectrumBatch(steeringVectors_, noiseSpace_, pseudospectrum_);
 
         return true;
     }
