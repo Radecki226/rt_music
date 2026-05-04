@@ -10,9 +10,6 @@ struct SingleFrequencyGeneratorConfig {
     float frequency;
 };
 
-/**
- * @param M number of microphones.
- */
 template<size_t M>
 class SingleFrequencyGenerator {
 private:

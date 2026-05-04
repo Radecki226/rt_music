@@ -1,28 +1,25 @@
 #pragma once
 
-// Common constants for MUSIC algorithm and steering vector precomputation
+#include <cmath>
 
 namespace MusicConstants {
 
-// System configuration
-constexpr float sampling_freq = 8000.0f;  // Sampling frequency in Hz
-constexpr size_t fft_size = 256;          // FFT size
+constexpr float sampling_freq = 8000.0f;
+constexpr size_t fft_size = 256;
 
-// Array configuration
-constexpr size_t M = 4;  // Number of microphones
-constexpr float spacing_meters = 0.05f;  // 5cm spacing
-constexpr float speed_of_sound = 343.0f;  // Speed of sound in m/s
+constexpr size_t M = 4;
+constexpr float spacing_meters = 0.05f;
+constexpr float speed_of_sound = 343.0f;
 
-// MUSIC algorithm parameters
-constexpr size_t n_angles = 256;  // Number of angles for pseudospectrum
-constexpr size_t n_frequencies = 32;  // Number of frequencies to analyze
+constexpr size_t n_angles = 256;
+constexpr size_t n_frequencies = 32;
 
-// Frequency range
-constexpr float start_freq = 687.5f;  // Start frequency in Hz
-constexpr float end_freq = 1687.5f;   // End frequency in Hz
+constexpr float start_freq = 687.5f;
+constexpr float end_freq = 1687.5f;
 
-// Derived constants
-constexpr float freq_step = (end_freq - start_freq) / (n_frequencies - 1);
+/** Grid uses [start_freq, end_freq); last bin is start + (n_frequencies - 1) * freq_step. */
+constexpr float freq_step =
+    (end_freq - start_freq) / static_cast<float>(n_frequencies);
 constexpr float angle_step = 2.0f * M_PI / n_angles;
 
-} // namespace MusicConstants
+}

@@ -5,16 +5,9 @@
 #include <stdexcept>
 #include <cstring>
 #include <algorithm>
-#include <mutex>
 #include <array>
 #include <complex>
 #include "Eigen/Dense"
-
-/**
- * Implementation of Circular Buffer.
- * For the time being covariance matrix doesn't perform mean before calculation.
- * Data is supposed to have mean ~0.
- */
 
 template <size_t M>
 class CircularBuffer : public ICircularBuffer<M> {
@@ -27,8 +20,6 @@ private:
     Eigen::Matrix<std::complex<float>, M, Eigen::Dynamic> matrix_;
 
     size_t headColumn_ = 0;
-
-    mutable std::mutex accessMutex_;
 
 public:
     explicit CircularBuffer(size_t initialColumns);
@@ -51,8 +42,6 @@ void CircularBuffer<M>::reconfig(size_t newColumns) {
         throw std::invalid_argument("N columns must be larger than 0!");
     }
 
-    std::lock_guard<std::mutex> lock(accessMutex_);
-
     matrix_.resize(M, newColumns);
     matrix_.setZero();
 
@@ -61,8 +50,6 @@ void CircularBuffer<M>::reconfig(size_t newColumns) {
 
 template <size_t M>
 void CircularBuffer<M>::push(const std::array<std::complex<float>, M> &column) {
-    std::lock_guard<std::mutex> lock(accessMutex_); 
-
     Eigen::Map<const Eigen::Matrix<std::complex<float>, M, 1>> columnView(column.data(), column.size());
     matrix_.col(headColumn_) = columnView;
 

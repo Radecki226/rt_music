@@ -4,11 +4,6 @@
 #include "SingleFrequencySystem.hpp"
 #include "MusicConstants.hpp"
 
-/**
- * Single frequency system. Supports 1187.5Hz frequency.
- * Mainly for test purpose.
- */
-
 struct SingleFrequencySystemIntegrationConfig {
     size_t computeIntervalFrames;
     size_t nSources;
@@ -18,8 +13,6 @@ struct SingleFrequencySystemIntegrationConfig {
 template <size_t M>
 class SingleFrequencySystemIntegration {
 private:
-    static constexpr size_t nSourcesFixed = 1;
-
     CircularBuffer<M> circularBuffer_;
     DspMusic<M> dspMusic_;
     SingleFrequencySystem<M> singleFrequencySystem_;
@@ -27,9 +20,9 @@ private:
 public:
     SingleFrequencySystemIntegration(struct SingleFrequencySystemIntegrationConfig config) :
         circularBuffer_(config.nAveragingFrames),
-        dspMusic_(nSourcesFixed, MusicConstants::n_angles),
+        dspMusic_(config.nSources, MusicConstants::n_angles),
         singleFrequencySystem_({
-            .frequencyIdx = 15,
+            .frequencyIdx = 15, //Fixed on 1187.5 Hz
             .nAngles = MusicConstants::n_angles,
             .computeIntervalFrames = config.computeIntervalFrames,
             .nSources = config.nSources

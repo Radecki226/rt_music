@@ -18,6 +18,7 @@ set(STRICT_WARNINGS
     -Wpedantic
     -Wno-sign-compare
     -Wno-psabi
+    -Werror
 )
 set(ASAN_FLAGS 
     -fsanitize=address 
@@ -29,11 +30,13 @@ target_link_options(StrictBuild INTERFACE ${ASAN_FLAGS})
 
 
 add_executable(unitTests
-    TestCircularBuffer.cpp
-    TestDspMusic.cpp
-    TestUniformPlanarSquareArray.cpp
-    TestSingleFrequencySystem.cpp
-    TestSingleFrequencySystemIntegration.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestCircularBuffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestDspMusic.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestUniformPlanarSquareArray.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestSingleFrequencySystem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestSingleFrequencySystemIntegration.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestMultiFrequencySystemIntegration.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CustomMalloc.cpp
 )
 
 target_link_libraries(unitTests PRIVATE
@@ -51,6 +54,7 @@ target_include_directories(unitTests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/testEnv
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/trompeloeil/include
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_compile_definitions(unitTests PRIVATE

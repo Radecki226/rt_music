@@ -1,67 +1,71 @@
 #pragma once
+
+#include <array>
+#include <complex>
 #include <cstddef>
-#include "SingleFrequencySystemIntegration.hpp"
+#include <vector>
+
+#include "CircularBuffer.hpp"
+#include "DspMusic.hpp"
+#include "Eigen/Dense"
+#include "MusicConstants.hpp"
+#include "SingleFrequencySystem.hpp"
 
 struct MultiFrequencySystemIntegrationConfig {
-    float samplingFrequencyHz;
-    float minFrequencyHz;
-    float maxFrequencyHz;
-    size_t fftSize;
-
-    size_t nAveragingFrames;
-    float  spacingMeters;
-    
-    size_t nAngles;
     size_t computeIntervalFrames;
     size_t nSources;
+    size_t nAveragingFrames;
 };
 
 template <size_t M>
 class MultiFrequencySystemIntegration {
 private:
-    std::vector<SingleFrequencySystemIntegration<M>> frequencySystems_;
-    std::vector<size_t> frequencyIndices_;
+    std::vector<CircularBuffer<M>> circularBuffers_;
+    DspMusic<M> dspMusic_;
+    std::vector<SingleFrequencySystem<M>> singleFrequencySystems_;
+    mutable Eigen::Matrix<float, Eigen::Dynamic, 1> aggregatedPseudospectrum_;
+
 public:
-    MultiFrequencySystemIntegration(struct MultiFrequencySystemIntegrationConfig config) {
-        for (size_t i = 0; i < config.fftSize; ++i) {
-            float frequencyHz = config.samplingFrequencyHz / 2.0f * 
-                                (static_cast<float>(i) / static_cast<float>(config.fftSize - 1));
+    explicit MultiFrequencySystemIntegration(struct MultiFrequencySystemIntegrationConfig config)
+        : dspMusic_(config.nSources, MusicConstants::n_angles) {
+        circularBuffers_.reserve(MusicConstants::n_frequencies);
+        singleFrequencySystems_.reserve(MusicConstants::n_frequencies);
 
-            if (frequencyHz < config.minFrequencyHz || frequencyHz > config.maxFrequencyHz) {
-                continue;
-            }
-
-            struct SingleFrequencySystemIntegrationConfig singleFreqConfig = {
-                .singleFrequencySystemConfig = {
-                    .frequencyHz = frequencyHz,
-                    .nAngles = config.nAngles,
-                    .computeIntervalFrames = config.computeIntervalFrames,
-                    .nSources = config.nSources
-                },
-                .nAveragingFrames = config.nAveragingFrames,
-                .spacingMeters = config.spacingMeters
-            };
-
-            frequencySystems_.emplace_back(singleFreqConfig);
-            frequencyIndices_.emplace_back(i);
+        for (size_t i = 0; i < MusicConstants::n_frequencies; ++i) {
+            circularBuffers_.emplace_back(config.nAveragingFrames);
         }
+
+        for (size_t i = 0; i < MusicConstants::n_frequencies; ++i) {
+            singleFrequencySystems_.emplace_back(
+                SingleFrequencySystemConfig{
+                    .frequencyIdx = i,
+                    .nAngles = MusicConstants::n_angles,
+                    .computeIntervalFrames = config.computeIntervalFrames,
+                    .nSources = config.nSources,
+                },
+                circularBuffers_[i],
+                dspMusic_);
+        }
+
+        aggregatedPseudospectrum_.resize(static_cast<Eigen::Index>(MusicConstants::n_angles));
+        aggregatedPseudospectrum_.setZero();
     }
 
-    bool processFrame(const std::vector<std::array<std::complex<float>, M>> &fftFrame) {
+    bool processFrame(
+        const std::array<std::array<std::complex<float>, M>, MusicConstants::n_frequencies> &perFrequency) {
         bool anyComputed = false;
-        for (size_t i = 0; i < frequencySystems_.size(); ++i) {
-            bool computed = frequencySystems_[i].processFrame(fftFrame[frequencyIndices_[i]]);
-            anyComputed = anyComputed || computed;
+        for (size_t i = 0; i < MusicConstants::n_frequencies; ++i) {
+            anyComputed |= singleFrequencySystems_[i].processFrame(perFrequency[i]);
         }
         return anyComputed;
     }
 
-    const Eigen::Matrix<float, Eigen::Dynamic, 1>& getPseudospectrum() const {
-        float sum = 0.0f;
-        for (const auto& system : frequencySystems_) {
-            sum += system.getPseudospectrum();
+    const Eigen::Matrix<float, Eigen::Dynamic, 1> &getPseudospectrum() const {
+        aggregatedPseudospectrum_.setZero();
+        for (size_t i = 0; i < singleFrequencySystems_.size(); ++i) {
+            aggregatedPseudospectrum_ += singleFrequencySystems_[i].getPseudospectrum();
         }
-
-        return sum / static_cast<float>(frequencySystems_.size());
+        aggregatedPseudospectrum_ *= 1.0f / static_cast<float>(singleFrequencySystems_.size());
+        return aggregatedPseudospectrum_;
     }
 };

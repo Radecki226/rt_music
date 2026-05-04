@@ -10,16 +10,12 @@
 #include <iostream>
 
 struct SingleFrequencySystemConfig {
-    /*Frequency to be analyzed in Hz*/
     size_t frequencyIdx;
 
-    /*Angle resolution in radians for the MUSIC spectrum*/
     size_t nAngles;
 
-    /*How often music should be calculated, in frames. N means that every N frames*/
     size_t computeIntervalFrames;
 
-    /*Number of signal sources to estimate*/
     size_t nSources;
 };
 
@@ -55,11 +51,6 @@ public:
         steeringVectors_ = steering_vectors[config_.frequencyIdx].transpose();
     }
 
-    /**
-     * Process a new frame of data.
-     * @param frame New frame of data to process.
-     * @return True if MUSIC spectrum was computed, false otherwise.
-     */
     bool processFrame(const std::array<std::complex<float>, M> &frame) {
         circularBuffer_.push(frame);
 
@@ -77,10 +68,6 @@ public:
         return true;
     }
 
-    /**
-     * Get the last computed MUSIC pseudospectrum.
-     * @return Reference to the pseudospectrum matrix.
-     */
     const Eigen::Matrix<float, Eigen::Dynamic, 1>& getPseudospectrum() const {
         return pseudospectrum_;
     }
