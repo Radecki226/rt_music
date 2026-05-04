@@ -15,9 +15,6 @@ namespace fs = std::filesystem;
 int main(int argc, char* argv[]) {
     using namespace MusicConstants;
 
-    // Calculate frequency step
-    const float freq_step = (end_freq - start_freq) / (n_frequencies - 1);
-
     // Create output directory
     fs::path output_dir = "steering_vectors";
     fs::create_directories(output_dir);
@@ -57,7 +54,7 @@ int main(int argc, char* argv[]) {
         file << "static const std::array<Eigen::Matrix<std::complex<float>, " << n_angles << ", " << M << ">, " << n_frequencies << "> steering_vectors = {\n";
 
         for (size_t freq_idx = 0; freq_idx < n_frequencies; ++freq_idx) {
-            const float frequency = start_freq + freq_idx * freq_step;
+            const float frequency = start_freq + static_cast<float>(freq_idx) * freq_step;
 
             // Create steering vector matrix for all angles (n_angles x M)
             Eigen::Matrix<std::complex<float>, Eigen::Dynamic, Eigen::Dynamic> steering_matrix(n_angles, M);

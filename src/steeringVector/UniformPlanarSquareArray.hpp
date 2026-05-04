@@ -17,7 +17,7 @@ constexpr bool is_power_of_two() noexcept {
     return N > 0u && ((N & (N - 1u)) == 0u);
 }
 
-} // namespace steering_vector_detail
+}
 
 template <std::size_t M>
 class UniformPlanarSquareArray : public ISteeringVectorModel<M> {

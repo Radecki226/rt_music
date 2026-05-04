@@ -17,8 +17,7 @@ int main() {
         
         if (success) {
             std::cout << "DSP Processing Successful!" << std::endl;
-            
-            // 2. Get the results
+
             const auto& spectrum = musicDsp_getPseudospectrum();
             std::cout << "Pseudospectrum size: " << spectrum.size() << std::endl;
             std::cout << "First 5 values: " << spectrum.head(5).transpose() << std::endl;

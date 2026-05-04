@@ -19,10 +19,6 @@ private:
     Eigen::Matrix<std::complex<float>, Eigen::Dynamic, Eigen::Dynamic> projections_;
 
 public:
-    /**
-     * @param signalSubspaceDim Effectively number of sources to be estimated.
-     * @param nAngles Number of steering-vector columns (angle grid size); buffers are sized here.
-     */
     explicit DspMusic(size_t signalSubspaceDim, size_t nAngles) {
         reconfig(signalSubspaceDim, nAngles);
     }
@@ -68,7 +64,6 @@ void DspMusic<M>::computeNoiseSpace(Eigen::Matrix<std::complex<float>, M, Eigen:
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix<std::complex<float>, M, M>> eigenSolver(covMatrix);
 
-    //TODO: implement some fallback
     if (eigenSolver.info() != Eigen::Success) {
         throw std::runtime_error("Eigen decomposition failed!");
     }
