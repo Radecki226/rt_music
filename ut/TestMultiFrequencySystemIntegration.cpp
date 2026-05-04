@@ -134,6 +134,56 @@ TEST_CASE("MultiFrequencySystemIntegration three random tones peak near true azi
     }
 }
 
+
+TEST_CASE("MultiFrequencySystemIntegration three random tones peak near true azimuth, low SNR, wide averaging window",
+          "[MultiFrequencySystemIntegration]") {
+    constexpr float kTheta = static_cast<float>(M_PI) / 5.0f;
+    constexpr float kSnr = 16.0f;
+    constexpr int kComputeIntervalFrames = 60;
+
+    std::mt19937 rng(42);
+    const auto freqIdx = pickThreeDistinctFrequencyIndices(rng);
+
+    ThreeTonePerFrequencyFrameGenerator generator(rng, kTheta, freqIdx, kSnr);
+
+    MultiFrequencySystemIntegrationConfig sysCfg = {
+        .computeIntervalFrames = kComputeIntervalFrames,
+        .nSources = 1,
+        .nAveragingFrames = kComputeIntervalFrames,
+    };
+    MultiFrequencySystemIntegration<MusicConstants::M> multi(sysCfg);
+
+    bool anyUpdate = false;
+    for (int iter = 0; iter < 200; ++iter) {
+        if (multi.processFrame(generator.next())) {
+            anyUpdate = true;
+        }
+    }
+    REQUIRE(anyUpdate);
+
+    const Eigen::Matrix<float, Eigen::Dynamic, 1> &ps = multi.getPseudospectrum();
+    REQUIRE(ps.size() == static_cast<Eigen::Index>(MusicConstants::n_angles));
+
+    Eigen::Index peakIndex = 0;
+    float peakVal = ps(0);
+    for (Eigen::Index i = 1; i < ps.size(); ++i) {
+        if (ps(i) > peakVal) {
+            peakVal = ps(i);
+            peakIndex = i;
+        }
+    }
+
+    const float estimatedAngle = static_cast<float>(peakIndex) * MusicConstants::angle_step;
+    REQUIRE(std::abs(estimatedAngle - kTheta) < 3.0f * MusicConstants::angle_step);
+
+    for (size_t k = 0; k < 3; ++k) {
+        const float hz = frequencyHzForIndex(generator.frequencyIndices()[k]);
+        REQUIRE(hz >= MusicConstants::start_freq);
+        REQUIRE(hz <= MusicConstants::end_freq);
+    }
+}
+
+
 TEST_CASE("MultiFrequencySystemIntegration memory alloc", "[MultiFrequencySystemIntegration]") {
     MultiFrequencySystemIntegrationConfig sysCfg = {
         .computeIntervalFrames = 5,
