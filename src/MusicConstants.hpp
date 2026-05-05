@@ -17,6 +17,9 @@ constexpr size_t n_frequencies = 32;
 constexpr float start_freq = 687.5f;
 constexpr float end_freq = 1687.5f;
 
+constexpr size_t start_freq_index = (start_freq / sampling_freq) * fft_size;
+constexpr size_t end_freq_index = (end_freq / sampling_freq) * fft_size;
+
 /** Grid uses [start_freq, end_freq); last bin is start + (n_frequencies - 1) * freq_step. */
 constexpr float freq_step =
     (end_freq - start_freq) / static_cast<float>(n_frequencies);

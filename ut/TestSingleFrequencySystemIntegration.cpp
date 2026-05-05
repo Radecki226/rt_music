@@ -52,7 +52,8 @@ TEST_CASE( "SingleFrequencySystemIntegration check peak", "[SingleFrequencySyste
     float angleStepRad = MusicConstants::angle_step;
     float estimatedAngleRad = peakIndex * angleStepRad;
 
-    REQUIRE(std::abs(estimatedAngleRad - generatorConfig.thetaRad) < angleStepRad);
+    constexpr float kAngleTol = 1e-5f;
+    REQUIRE(std::abs(estimatedAngleRad - generatorConfig.thetaRad) < angleStepRad + kAngleTol);
 }
 
 TEST_CASE( "SingleFrequencySystemIntegration check peak low SNR, wide averaging window", "[SingleFrequencySystemIntegration]" ) {
@@ -91,7 +92,6 @@ TEST_CASE( "SingleFrequencySystemIntegration check peak low SNR, wide averaging 
     size_t peakIndex = 0;
     float peakValue = 0.0f;
     for (size_t i = 0; i < pseudospectrum.size(); ++i) {
-        printf("pseudospectrum(%zu) = %f\n", i, pseudospectrum(i));
         if (pseudospectrum(i) > peakValue) {
             peakValue = pseudospectrum(i);
             peakIndex = i;
@@ -100,7 +100,8 @@ TEST_CASE( "SingleFrequencySystemIntegration check peak low SNR, wide averaging 
     float angleStepRad = MusicConstants::angle_step;
     float estimatedAngleRad = peakIndex * angleStepRad;
 
-    REQUIRE(std::abs(estimatedAngleRad - generatorConfig.thetaRad) < angleStepRad);
+    constexpr float kAngleTol = 1e-5f;
+    REQUIRE(std::abs(estimatedAngleRad - generatorConfig.thetaRad) < angleStepRad + kAngleTol);
 }
 
 

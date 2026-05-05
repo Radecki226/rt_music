@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(unitTests CXX)
+project(unitTests CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -53,6 +53,7 @@ target_include_directories(unitTests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/system
     ${CMAKE_CURRENT_SOURCE_DIR}/../src/testEnv
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/eigen
+    ${CMAKE_CURRENT_SOURCE_DIR}/../ext/kissfft
     ${CMAKE_CURRENT_SOURCE_DIR}/../ext/trompeloeil/include
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
@@ -60,5 +61,9 @@ target_include_directories(unitTests PRIVATE
 target_compile_definitions(unitTests PRIVATE
     TROMPELOEIL_BUILD_TESTS=yes
 )
+
+set(KISSFFT_C ${CMAKE_CURRENT_SOURCE_DIR}/../ext/kissfft/kiss_fft.c)
+set_source_files_properties(${KISSFFT_C} PROPERTIES LANGUAGE C)
+target_sources(unitTests PRIVATE ${KISSFFT_C})
 
 catch_discover_tests(unitTests)

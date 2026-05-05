@@ -5,6 +5,7 @@
 #include "SingleFrequencyGenerator.hpp"
 #include "UniformPlanarSquareArray.hpp"
 #include "CustomMalloc.hpp"
+#include "FileBasedGenerator.hpp"
 
 #include <array>
 #include <cmath>
@@ -199,4 +200,53 @@ TEST_CASE("MultiFrequencySystemIntegration memory alloc", "[MultiFrequencySystem
     }
 
     REQUIRE(CustomMalloc::getMallocCounter() == 0);
+}
+
+TEST_CASE("Test with from file generator", "[MultiFrequencySystemIntegration]") {
+
+    constexpr int kComputeIntervalFrames = 60;
+    constexpr float kTheta = static_cast<float>(M_PI) / 3;
+
+    UniformPlanarSquareArray<MusicConstants::M> planar(MusicConstants::spacing_meters);
+    FileBasedGeneratorConfig config = {
+        .filename = "/host/workdir/rt_music/scripts/sample-0.float_lines.txt",
+        .thetaRad = kTheta
+    };
+
+    FileBasedGenerator generator(planar, config);
+
+    MultiFrequencySystemIntegrationConfig sysCfg = {
+        .computeIntervalFrames = kComputeIntervalFrames,
+        .nSources = 1,
+        .nAveragingFrames = kComputeIntervalFrames,
+    };
+    MultiFrequencySystemIntegration<MusicConstants::M> multi(sysCfg);
+
+    std::vector<std::array<std::array<std::complex<float>, MusicConstants::M>, MusicConstants::n_frequencies>> data = generator.getData();
+
+    REQUIRE(data.size() > 120);
+
+    for(int i = 0; i < 120; i++) {
+        bool result = multi.processFrame(data[i]);
+        if (i % 60 == 59) {
+            REQUIRE(result == true);
+            const Eigen::Matrix<float, Eigen::Dynamic, 1> &ps = multi.getPseudospectrum();
+            REQUIRE(ps.size() == static_cast<Eigen::Index>(MusicConstants::n_angles));
+        
+            Eigen::Index peakIndex = 0;
+            float peakVal = ps(0);
+            for (Eigen::Index i = 1; i < ps.size(); ++i) {
+                if (ps(i) > peakVal) {
+                    peakVal = ps(i);
+                    peakIndex = i;
+                }
+            }
+
+            const float estimatedAngle = static_cast<float>(peakIndex) * MusicConstants::angle_step;
+            REQUIRE(std::abs(estimatedAngle - kTheta) < 3.0f * MusicConstants::angle_step);
+
+        } else {
+            REQUIRE(result == false);
+        }
+    }
 }
