@@ -9,7 +9,10 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/../../../../:"
 
 # Pull in the entire src directory
 # Yocto will preserve the internal structure (src/lib/...)
-SRC_URI = "file://src/"
+SRC_URI = "file://src/ file://data/steering_vectors/"
+
+# steering_vectors.hpp is generated (gitignored): run
+# precompute_steering_vectors/generate_steering_vectors.sh before bitbake.
 
 # Set S to the location of your CMakeLists.txt
 # Since you moved it to src/lib, S must match that path

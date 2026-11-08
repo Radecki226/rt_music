@@ -90,6 +90,92 @@ cmake -GNinja ..
 ninja && ctest -R ".*"
 ```
 
-### Yocto / embedded image (optional)
+### Yocto image for BeaglePlay
 
-Large upstream layers (**poky**, **meta-openembedded**, **meta-arm**, **meta-ti**, …) are **not** submodules in this repo so `git submodule update` does not pull them. The in-tree **`yocto/meta-music`** directory is a BSP layer you can copy or add-layer from your own Yocto tree (after you clone poky and dependencies elsewhere). Point `bitbake-layers add-layer` at the absolute path to `meta-music` and follow your BSP’s docs for `MACHINE` and dependencies.
+The upstream layers are pinned as submodules under `yocto/` (all on the **scarthgap** branch). The project's own layer is [`yocto/meta-music`](yocto/meta-music). It provides `music-image`, which is `core-image-minimal` plus `music-dsp` (shared library from `src/lib`), `music-client` (from `src/client`), a dropbear SSH server, and the WL18xx Wi-Fi firmware and drivers.
+
+#### 1. Host prerequisites (Ubuntu 24.04)
+
+```
+sudo apt install gawk wget git diffstat unzip texinfo gcc g++ build-essential chrpath socat \
+    cpio python3 python3-pip python3-pexpect xz-utils debianutils iputils-ping python3-git \
+    python3-jinja2 python3-subunit zstd liblz4-tool file locales libacl1 bmap-tools
+sudo locale-gen en_US.UTF-8
+```
+
+Ubuntu 24.04 blocks unprivileged user namespaces, and BitBake needs them (otherwise it fails with *"User namespaces are not usable by BitBake"*):
+
+```
+echo 'kernel.apparmor_restrict_unprivileged_userns = 0' | sudo tee /etc/sysctl.d/60-bitbake-userns.conf
+sudo sysctl --system
+```
+
+Plan on about 100 GB of free disk space and several hours for the first build.
+
+#### 2. Fetch the layers
+
+```
+git submodule update --init --recursive
+```
+
+#### 3. Create the build directory and add layers
+
+Run this from `yocto/`. It creates `yocto/build`, which is gitignored:
+
+```
+cd yocto
+source poky/oe-init-build-env build      # cds into yocto/build
+bitbake-layers add-layer ../meta-openembedded/meta-oe
+bitbake-layers add-layer ../meta-arm/meta-arm-toolchain
+bitbake-layers add-layer ../meta-arm/meta-arm
+bitbake-layers add-layer ../meta-ti/meta-ti-bsp
+bitbake-layers add-layer ../meta-music
+bitbake-layers show-layers               # verify
+```
+
+`meta-oe` is required because both `music-dsp` and `music-client` depend on `libeigen`.
+
+#### 4. Select the machine
+
+Add this to `yocto/build/conf/local.conf`:
+
+```
+MACHINE = "beagleplay-ti"
+```
+
+The k3r5 multiconfig (the R5 bootloader core) is enabled automatically by the machine config, so you don't need to set `BBMULTICONFIG`. To use the BeagleBoard.org kernel instead of TI's, also add `../meta-ti/meta-beagle` and use `MACHINE = "beagleplay"`.
+
+#### 5. Build
+
+```
+bitbake music-image
+```
+
+To rebuild only the app after changing code in `src/`:
+
+```
+bitbake -c cleansstate music-dsp music-client && bitbake music-image
+```
+
+#### 6. Flash an SD card
+
+The output goes to `yocto/build/tmp/deploy/images/beagleplay-ti/`. Replace `/dev/sdX` with your SD card and double-check it with `lsblk` first:
+
+```
+cd tmp/deploy/images/beagleplay-ti
+sudo bmaptool copy music-image-beagleplay-ti.rootfs.wic.xz /dev/sdX
+```
+
+Insert the card, then **hold the USR button while powering on** so BeaglePlay boots from SD instead of eMMC.
+
+#### 7. Log in
+
+- **Serial console:** UART header, `ttyS2`, 115200 baud.
+- **SSH:** `ssh root@<board-ip>`. The image includes `debug-tweaks`, so root has an empty password. Development use only.
+- **Wi-Fi:** configure `/etc/wpa_supplicant.conf`, then run `wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf && udhcpc -i wlan0`.
+
+#### Returning to an existing build
+
+```
+cd yocto && source poky/oe-init-build-env build && bitbake music-image
+```

@@ -209,7 +209,7 @@ TEST_CASE("Test with from file generator", "[MultiFrequencySystemIntegration]") 
 
     UniformPlanarSquareArray<MusicConstants::M> planar(MusicConstants::spacing_meters);
     FileBasedGeneratorConfig config = {
-        .filename = "/host/workdir/rt_music/scripts/sample-0.float_lines.txt",
+        .filename = "/home/pr/Desktop/rt_music/scripts/sample-0.float_lines.txt",
         .thetaRad = kTheta
     };
 

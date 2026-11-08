@@ -18,6 +18,7 @@ target_include_directories(MusicDsp PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..//dsp>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../steeringVector>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../system>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../data/steering_vectors>
     $<INSTALL_INTERFACE:include/music-dsp>
 )
 
@@ -39,5 +40,6 @@ install(TARGETS MusicDsp
 # Install the header files so you can build apps against the library later
 install(FILES 
     musicDsp.hpp 
+    ../MusicConstants.hpp
     DESTINATION include/music-dsp
 )
