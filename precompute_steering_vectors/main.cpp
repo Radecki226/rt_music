@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     fs::path output_dir = "steering_vectors";
     fs::create_directories(output_dir);
 
-    // Create steering vector model (N×N square grid, row-major mic index)
+    // Create steering vector model (N×N square grid, snake mic index; 2x2 = anticlockwise)
     UniformPlanarSquareArray<M> uniformPlanarSquareArray(spacing_meters, speed_of_sound);
 
     // Generate angles: 0 to 2π

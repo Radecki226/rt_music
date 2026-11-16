@@ -13,7 +13,7 @@ bool inTolerance(const std::complex<float>& a, const std::complex<float>& b, flo
 TEST_CASE("UniformPlanarSquareArray 2×2, 5 cm spacing", "[UniformPlanarSquareArray]") {
     UniformPlanarSquareArray<4> sensor(0.05f);
 
-    WHEN("azimuth 0, 1000 Hz — phase depends only on column i") {
+    WHEN("azimuth 0, 1000 Hz — phase depends only on x") {
         auto sv = sensor.getSteeringVector(0.0f, 1000.0f);
 
         const float lambda = 343.0f / 1000.0f;
@@ -21,9 +21,24 @@ TEST_CASE("UniformPlanarSquareArray 2×2, 5 cm spacing", "[UniformPlanarSquareAr
         const auto step = std::exp(std::complex<float>(0.0f, phase1));
 
         REQUIRE(sv[0] == std::complex<float>{1.0f, 0.0f});
-        REQUIRE(sv[2] == std::complex<float>{1.0f, 0.0f});
+        REQUIRE(sv[3] == std::complex<float>{1.0f, 0.0f});
         REQUIRE(inTolerance(sv[1], step, 1e-5f));
-        REQUIRE(inTolerance(sv[3], step, 1e-5f));
+        REQUIRE(inTolerance(sv[2], step, 1e-5f));
+    }
+
+    WHEN("azimuth pi/4, 1000 Hz — opposite corner leads by sqrt(2)*d") {
+        auto sv = sensor.getSteeringVector(static_cast<float>(M_PI) / 4.0f, 1000.0f);
+
+        const float lambda = 343.0f / 1000.0f;
+        const float k = 2.0f * static_cast<float>(M_PI) / lambda;
+        const float half = k * 0.05f * static_cast<float>(M_SQRT1_2);
+        const auto adj = std::exp(std::complex<float>(0.0f, half));
+        const auto diag = std::exp(std::complex<float>(0.0f, 2.0f * half));
+
+        REQUIRE(inTolerance(sv[0], std::complex<float>{1.0f, 0.0f}, 1e-5f));
+        REQUIRE(inTolerance(sv[1], adj, 1e-5f));
+        REQUIRE(inTolerance(sv[2], diag, 1e-5f));
+        REQUIRE(inTolerance(sv[3], adj, 1e-5f));
     }
 
     WHEN("azimuth pi/2, 1000 Hz — phase depends only on row j") {

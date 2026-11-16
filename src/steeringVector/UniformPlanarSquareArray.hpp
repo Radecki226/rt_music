@@ -42,7 +42,8 @@ public:
 
         std::size_t idx = 0;
         for (std::size_t j = 0; j < N; ++j) {
-            for (std::size_t i = 0; i < N; ++i) {
+            for (std::size_t step = 0; step < N; ++step) {
+                const std::size_t i = (j % 2u == 0u) ? step : (N - 1u - step);
                 const float phase = k * d * (static_cast<float>(i) * cth + static_cast<float>(j) * sth);
                 sv(static_cast<Eigen::Index>(idx), 0) = std::exp(std::complex<float>(0.0f, phase));
                 ++idx;
